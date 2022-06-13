@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- CSS only -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+<style>
+  *{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+ #todoTitle::first-letter{
+    color: red !important;
+    text-transform: uppercase !important;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="row pt-4 mb-4">
+
+      <div class="col-lg-5 col-md-6 col-sm-9 mx-auto bg-dark">
+        <div class="text-center mb-4">
+          <input type="hidden" id="hidden" value=""/> 
+          <code class="fs-1">TODO</code>
+        </div>
+        <div class="px-lg-4 px-md-3 mb-3">
+          <label for="" class="text-light">Todo Title</label>
+          <input type="text"   class="form-control in" id="todoTitle" placeholder="Todo title">
+        </div> 
+
+        <div class="px-lg-4 px-md-3 mb-3">
+          <label for="" class="text-light">Todo description</label>
+          <textarea name=""  style="max-height: 65px;" class="form-control"   placeholder="Add Your Todo description here" id="todoDes" cols="30" rows="10"></textarea>
+        </div>
+        <div class="row mb-3">
+          <button class="btn btn-primary col-6 mx-auto " id="addBtn">ADD</button>
+        </div>
+      </div>
+    </div>
+    <!-- <input type="hidden" value="bbb"/> -->
+    <div class="">
+      
+        <div class="row ">
+          <div class="col-lg-7 text-light mx-auto">
+            <table class="table col-12">
+              <thead>
+                <tr class="">
+                  <th>S/N</th>
+                  <th>TODO</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="display">
+              </tbody>
+            </table>
+          </div>
+        </div>
+    </div>
+  </div>
+  
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.8.2/firebase-app.js";
+    import { getDatabase,ref,set,onValue } from "https://www.gstatic.com/firebasejs/9.8.2/firebase-database.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDIBaKkC5lXdKid_5QZeIusV3CZesDKWfA",
+      authDomain: "todo-assignment-edacc.firebaseapp.com",
+      projectId: "todo-assignment-edacc",
+      storageBucket: "todo-assignment-edacc.appspot.com",
+      messagingSenderId: "363924315873",
+      appId: "1:363924315873:web:e164711e6d64c6348a21a0"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const dataBase= getDatabase();
+
+
+    let dbRef=ref(dataBase,"TodoList")
+    let myIndex=0;
+    let myArray=[]
+    onValue(dbRef,(snapShot)=>{
+     let myArray=snapShot.val();
+        if(myArray){
+          myIndex=myArray.length;
+          display(myArray)
+        }
+    })
+
+    document.getElementById("addBtn").addEventListener("click",()=>{
+    // alert("am working ")
+      let todo= todoTitle.value;
+      let todoD= document.getElementById("todoDes").value;
+      if( document.getElementById("addBtn").innerText=="ADD"){
+        let todoObj={"todo":todo,"todoDescription":todoD}
+        let dbRef= ref(dataBase,`TodoList/${myIndex}`)
+        if(todo!=="" && todoD !==""){
+          set(dbRef, todoObj);
+          todoTitle.value="";
+          document.getElementById("todoDes").value=""
+          return;
+        }
+        alert("the field is empty")
+        return
+      }
+      let myArray=[]
+      onValue(dbRef,(snapShot)=>{
+        myArray=snapShot.val();
+      })
+      let hid=document.getElementById("hidden").value
+      myArray[hid].todo=todo
+      myArray[hid].todoDescription=todoD
+      set(dbRef, myArray)
+      document.getElementById("addBtn").innerText="ADD"
+      todoTitle.value="";
+      document.getElementById("todoDes").value=""
+      return
+    })
+
+
+    const display=(e)=>{
+      let inner="";
+   
+      e.map((todos,index)=>{
+        inner+="<tr>"
+          inner+=`<td class=''>  ${eval(index+1)} </td><td class=''><b> ${ todos.todo}</b><p class=''>${todos.todoDescription }</p></td><td> <button class="btn btn-primary" onclick="edit(${index})">Edit </button>  <button class="btn btn-danger" onclick="goo(${index})">Delete </button> </td>`
+          inner+="</td>"
+      })
+     
+        document.getElementById("display").innerHTML=inner
+
+    }
+
+   function goo(e){
+     let myArray=[];
+    onValue(dbRef,(snapShot)=>{
+      myArray=snapShot.val();
+      
+    })
+    let newdatabase=myArray.filter((todo,index)=>{
+      return index!==e
+    })
+    set(dbRef, newdatabase);
+
+   }
+   window.goo=goo;
+
+   function edit(e){
+    let myArray=[];
+    onValue(dbRef,(snapShot)=>{
+      myArray=snapShot.val();
+      
+    })
+   todoTitle.value=myArray[e].todo
+  document.getElementById("todoDes").value=myArray[e].todoDescription
+
+     
+    document.getElementById("addBtn").innerText="Edit"
+    document.getElementById("hidden").value=e
+
+   }
+   window.edit=edit;
+  </script>
+</body>
+</html>
